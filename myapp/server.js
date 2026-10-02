@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const port = 3000;
+app.use(express.json());
 
 const tasks = [
   { id: 1, title: "Learn Node.js", done: false }, 
@@ -15,7 +16,6 @@ app.get('/', (req, res) => {
     "endpoints": ["/tasks"]
 });
 });
-
 
 app.get('/health', (req, res) => {
   res.send({"status": "ok"});
@@ -43,4 +43,23 @@ app.get('/tasks/:id', (req, res) => {
   res.json(task);
 });
 
+app.post("/tasks", (req, res) => {
+  const title = req.body.title;
+  
+  if(!title || title.trim() === ""){
+    res.status(400).json({
+      error : "The title is missing or empty."
+    });
+  };
 
+  const newId = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
+  const newTask = {
+    id : newId,
+    title : title.trim(),
+    done : false
+  }
+
+  tasks.push(newTask);
+
+  res.status(201).json(newTask);
+})
