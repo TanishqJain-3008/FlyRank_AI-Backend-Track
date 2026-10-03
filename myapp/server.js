@@ -3,6 +3,11 @@ const app = express();
 const port = 3000;
 app.use(express.json());
 
+const swaggerUi = require("swagger-ui-express");
+const openapiDocument = require("./openapi.json");
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
+
+
 const tasks = [
   { id: 1, title: "Learn Node.js", done: false }, 
   { id: 2, title: "Build a REST API", done: false }, 
