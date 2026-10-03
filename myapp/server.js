@@ -62,4 +62,49 @@ app.post("/tasks", (req, res) => {
   tasks.push(newTask);
 
   res.status(201).json(newTask);
-})
+});
+
+app.put("/tasks/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const newTask = tasks.find(task => task.id === id);
+  
+  if(!newTask){
+    return res.status(404).json({
+      error : "Unknown id"
+    });
+  }
+
+  const title = req.body.title.trim();
+  const done = req.body.done;
+  if(!title || title.trim() === "" || typeof title !== "string"){
+    return res.status(400).json({
+      error : "Empty/invalid title"
+    });
+  }
+
+  if(typeof done !== "boolean"){
+    return res.status(400).json({
+      error : "Done must have boolean datatype"
+    })
+  }
+
+  newTask.title = title;
+  newTask.done = done;
+
+  res.status(200).json(newTask);  
+});
+
+app.delete("/tasks/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const taskIndex = tasks.findIndex(task => task.id === id);
+
+  if(taskIndex === -1){
+    return res.status(404).json({
+      error : "Unknown Task ID"
+    })
+  }
+
+  tasks.splice(taskIndex, 1);
+
+  res.status(204).send();
+});
