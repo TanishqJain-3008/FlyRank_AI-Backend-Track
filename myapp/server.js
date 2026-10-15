@@ -41,7 +41,7 @@ app.listen(port, () => {
 });
 
 
-// aapp.get('/tasks', (req, res) => {
+// app.get('/tasks', (req, res) => {
 //   res.json(tasks);
 // });
 
@@ -135,3 +135,33 @@ if(taskCount.count === 0){
   insert.run("Build my first API", 0);
   insert.run("Learn Git", 1);
 }
+
+app.get("/tasks", (req, res) => {
+  const rows = db.prepare("SELECT * FROM tasks").all();
+
+  const tasks = rows.map(task => ({
+    id : task.id,
+    title : task.title,
+    done : Boolean(task.done)
+  }));
+
+  res.json(tasks);
+})
+
+app.get("/tasks", (req, res) => {
+  const id = req.params.id;
+
+  const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+
+  if(!task){
+    return res.status(404).json({
+      error : "Task not found"
+    });
+  }
+
+  res.json({
+    id : task.id,
+    title : task.title,
+    done : Boolean(task.done)
+  });
+});
