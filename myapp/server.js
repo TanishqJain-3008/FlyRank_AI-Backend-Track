@@ -148,7 +148,7 @@ app.get("/tasks", (req, res) => {
   res.json(tasks);
 })
 
-app.get("/tasks", (req, res) => {
+app.get("/tasks/:id", (req, res) => {
   const id = req.params.id;
 
   const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
