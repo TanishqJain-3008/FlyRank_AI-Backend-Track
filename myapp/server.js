@@ -244,6 +244,6 @@ app.delete("/tasks/:id", (req, res) => {
     });
   }
 
-  db.prepare("DELETE FROM tasks WHERE id = ?").get(id);
+  db.prepare("DELETE FROM tasks WHERE id = ?").run(id);
   return res.status(204).send();
 });
