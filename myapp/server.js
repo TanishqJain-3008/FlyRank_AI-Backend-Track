@@ -189,3 +189,61 @@ app.post("/tasks", (req, res) => {
     done: Boolean(newTask.done)
   });
 });
+
+app.put("/tasks/:id", (req, res) => {
+  const id = req.params.id;
+
+  const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+  if(!task){
+    return res.status(404).json({
+      error: "Task not found"
+    });
+  }
+
+  const title = req.body.title;
+  const done = req.body.done;
+
+  if(!task || typeof task !== "string" || task.trim() === ""){
+    return res.status(400).json({
+      error: "Title must be a non-empty string"
+    });
+  }
+
+  if(typeof done !== "boolean"){
+    return res.status(400).json({
+      error : "Done must be true or false"
+    });
+  }
+
+  db.prepare(`
+    UPDATE tasks
+    SET title = ?, done = ?
+    WHERE id = ?
+    `).run(
+      title.trim(),
+      done ? 1 : 0,
+      id
+    );
+
+    const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+
+    return res.status(400).json({
+      id: updatedTask.is,
+      title: updatedTask.title,
+      done: Boolean(updatedTask.done)
+    });
+});
+
+app.delete("/tasks/:id", (req, res) => {
+  const id = req.params.id;
+
+  const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+  if(!task){
+    return res.status(404).json({
+      error: "Task not found"
+    });
+  }
+
+  db.prepare("DELETE FROM tasks WHERE id = ?").get(id);
+  return res.status(204).send();
+});
