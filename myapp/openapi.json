@@ -3,7 +3,7 @@
   "info": {
     "title": "Task API",
     "version": "1.0.0",
-    "description": "A simple in-memory CRUD API for managing tasks."
+    "description": "A simple CRUD API for managing tasks stored in SQLite."
   },
   "servers": [
     {
@@ -103,7 +103,14 @@
         },
         "responses": {
           "200": {
-            "description": "Task updated"
+            "description": "Task updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid input"
@@ -154,6 +161,28 @@
           "done"
         ],
         "properties": {
+          "title": {
+            "type": "string",
+            "example": "Learn Express"
+          },
+          "done": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "done"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
           "title": {
             "type": "string",
             "example": "Learn Express"

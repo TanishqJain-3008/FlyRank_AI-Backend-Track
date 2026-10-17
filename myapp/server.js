@@ -203,7 +203,7 @@ app.put("/tasks/:id", (req, res) => {
   const title = req.body.title;
   const done = req.body.done;
 
-  if(!task || typeof task !== "string" || task.trim() === ""){
+  if(typeof title !== "string" || title.trim() === ""){
     return res.status(400).json({
       error: "Title must be a non-empty string"
     });
@@ -227,8 +227,8 @@ app.put("/tasks/:id", (req, res) => {
 
     const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
 
-    return res.status(400).json({
-      id: updatedTask.is,
+    return res.status(200).json({
+      id: updatedTask.id,
       title: updatedTask.title,
       done: Boolean(updatedTask.done)
     });
