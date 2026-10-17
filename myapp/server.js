@@ -165,3 +165,27 @@ app.get("/tasks/:id", (req, res) => {
     done : Boolean(task.done)
   });
 });
+
+app.post("/tasks", (req, res) => {
+  const title = req.body.title;
+
+  if(!title || typeof title!== "string" || title.trim() === ""){
+    return res.status(400).json({
+      error : "Tite is not acc. to required format."
+    });
+  }
+
+  const result = db.prepare(`
+    INSERT INTO tasks (title, done)
+    VALUES (?, ?)
+    `)
+    .run(title.trim(), 0);
+
+  const newTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(result.lastInsertRowid);
+
+  res.status(201).json({
+    id: newTask.id,
+    title: newTask.title,
+    done: Boolean(newTask.done)
+  });
+});
