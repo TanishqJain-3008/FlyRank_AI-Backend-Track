@@ -1,151 +1,194 @@
-# Task API with SQLite
+# Task Management API with PostgreSQL and Docker
 
-A REST API built using Node.js, Express.js, and SQLite to manage tasks. The API supports creating, reading, updating, and deleting tasks, with data stored persistently in a local SQLite database. 
--> Commented code is the part from previous assignments' changes, so please ignore them.
+## Overview
+
+This project is a RESTful Task Management API built with Node.js and Express. It uses PostgreSQL for persistent data storage and Docker Compose to run the application and database together.
+
+The project demonstrates CRUD operations, database integration, containerization, and data persistence across container restarts.
 
 ## Features
 
-- RESTful CRUD operations for tasks
-- SQLite database for persistent storage
-- Automatic database and table creation
-- Three sample tasks inserted on the first run only
-- Input validation and appropriate HTTP status codes
-- Swagger UI documentation
+- Create, read, update, and delete tasks.
+- Store task data in a PostgreSQL database.
+- Validate request data and handle errors.
+- Run the application and database using Docker Compose.
+- Automatically initialize the database schema using an SQL script.
+- Preserve task data using a Docker named volume.
 
 ## Tech Stack
 
 - Node.js
 - Express.js
-- SQLite
-- better-sqlite3
-- Swagger UI Express
+- PostgreSQL
+- Docker and Docker Compose
+- `pg` PostgreSQL client
 
 ## Project Structure
 
 ```text
 myapp/
-├── server.js
-├── openapi.json
-├── tasks.db
-├── README.md
-├── database.png
+├── db/
+│   └── init.sql
+├── repositories/
+│   └── postgresTaskRepository.js
+├── routes/
+│   └── taskRoutes.js
+├── services/
+│   └── taskService.js
+├── .env
+├── .env.example
 ├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+├── openapi.json
 ├── package.json
-└── package-lock.json
+└── server.js
 ```
 
-Note: `tasks.db` is created automatically when the application runs if it does not already exist. `database.png` is the screenshot of the database in DB Browser for SQLite.
+## Setup and Execution
 
-## Installation and Setup
+### 1. Prerequisites
 
-1. Clone the repository.
-2. Open the project folder in the terminal.
-3. Install dependencies:
+Install Docker Desktop and ensure its Docker engine is running.
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the project root with the required application port and database connection string.
+
+Example configuration:
+
+```env
+PORT=3000
+DATABASE_URL=postgresql://appuser:1234@db:5432/tasksdb
+```
+
+The hostname `db` refers to the PostgreSQL service defined in Docker Compose.
+
+Keep `.env` out of version control. Use `.env.example` to document the required variables without exposing real credentials.
+
+### 3. Start the Application
+
+Run the following command from the project directory:
 
 ```bash
-npm install
+docker compose up --build
 ```
 
-4. Start the server:
+Docker Compose builds the Node.js application image, starts PostgreSQL, waits for the database health check, and then starts the application.
+
+### 4. Access the API
+
+The API is available at:
+
+```text
+http://localhost:3000/tasks
+```
+
+To stop the containers, run:
 
 ```bash
-node server.js
+docker compose down
 ```
 
-The API runs at:
-http://localhost:3000
-
-The database and tasks table are created automatically when the application starts. Three sample tasks are inserted only when the table is empty.
+The database volume is retained when using this command, so stored tasks survive container restarts.
 
 ## API Endpoints
 
-| Method | Endpoint | Description | Success Status |
-|---|---|---|---|
-| GET | `/` | Get API information | 200 |
-| GET | `/health` | Check server health | 200 |
-| GET | `/tasks` | Get all tasks | 200 |
-| GET | `/tasks/:id` | Get a task by ID | 200 |
-| POST | `/tasks` | Create a task | 201 |
-| PUT | `/tasks/:id` | Update a task | 200 |
-| DELETE | `/tasks/:id` | Delete a task | 204 |
-| GET | `/docs` | Open Swagger documentation | 200 |
-
-Invalid input returns `400 Bad Request`, while requests for nonexistent tasks return `404 Not Found`.
-
-## Example Requests
-
-### Get all tasks
-
-```bash
-curl http://localhost:3000/tasks
-```
-
-### Create a task
-
-```bash
-curl -X POST http://localhost:3000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Learn SQLite\"}"
-```
-
-### Update a task
-
-```bash
-curl -X PUT http://localhost:3000/tasks/1 -H "Content-Type: application/json" -d "{\"title\":\"Learn SQLite properly\",\"done\":true}"
-```
-
-### Delete a task
-
-```bash
-curl -i -X DELETE http://localhost:3000/tasks/1
-```
-
-Note: Replace `1` with an existing task ID when necessary.
-
-## Database
-
-The application uses SQLite through `better-sqlite3`. The database file is named `tasks.db` and is stored in the project directory.
-
-The `tasks` table contains:
-
-| Column | Type | Description |
+| Method | Endpoint | Description |
 |---|---|---|
-| `id` | INTEGER | Unique task ID |
-| `title` | TEXT | Task title |
-| `done` | BOOLEAN | Task completion status |
+| GET | `/tasks` | Retrieve all tasks |
+| GET | `/tasks/:id` | Retrieve a task by ID |
+| POST | `/tasks` | Create a new task |
+| PUT | `/tasks/:id` | Update a task |
+| DELETE | `/tasks/:id` | Delete a task |
 
-SQLite stores Boolean values as integers: `0` represents false and `1` represents true.
+### Example: Create a Task
 
-### Example SQL Query
+Request:
 
-```sql
-SELECT * FROM tasks;
+```http
+POST /tasks
+Content-Type: application/json
 ```
 
-This query retrieves all tasks stored in the database.
+Request body:
 
-### Database Screenshot
+```json
+{
+  "title": "Learn PostgreSQL"
+}
+```
 
-The database was inspected using DB Browser for SQLite.
+A successful request returns HTTP `201 Created` with the created task.
 
-![SQLite Database Screenshot](database.png)
+### Example: Update a Task
 
-## Data Persistence
+Request body:
 
-Unlike an in-memory array, SQLite stores task data in a database file. Tasks remain available after the server restarts, and the application does not insert duplicate sample tasks every time it starts.
+```json
+{
+  "title": "Learn PostgreSQL",
+  "done": true
+}
+```
 
-## Running the Project
+A successful update returns HTTP `200 OK`.
 
-Clone the repository, install dependencies using `npm install`, and run `node server.js`. The database and table are created automatically if they do not exist.
+## Error Handling
 
-## Documentation
+The API validates incoming data and handles missing resources.
 
-Swagger UI is available at:
-http://localhost:3000/docs
+- `400 Bad Request`: Invalid input.
+- `404 Not Found`: Requested task does not exist.
+- `201 Created`: Task created successfully.
+- `200 OK`: Request or update completed successfully.
+- `204 No Content`: Task deleted successfully.
+
+## Database and Persistence
+
+The `db/init.sql` script creates the `tasks` table in PostgreSQL. The database repository performs SQL queries using the `pg` client and parameterized queries.
+
+Docker Compose uses a named volume, `postgres_data`, to persist PostgreSQL's data independently of the database container's lifecycle.
+
+**Persistence verification:** Task data was retained after stopping and restarting the containers.
+
+Note: PostgreSQL initialization scripts run automatically only when the database data directory is first initialized.
+
+## Testing
+
+The following functionality was verified:
+
+- Creating and retrieving tasks.
+- Updating task details and completion status.
+- Deleting tasks.
+- Handling invalid input and missing task IDs.
+- Connecting the Node.js application to PostgreSQL.
+- Retaining database records across container restarts.
+
+## Security and Configuration
+
+- Environment-specific settings are stored in `.env`.
+- `.env` should be excluded from version control.
+- `.env.example` documents the required configuration.
+- Database queries use parameterized SQL to help prevent SQL injection.
+
+For production deployments, use strong database credentials and manage secrets securely.
 
 ## Learning Outcomes
 
-- Building REST APIs with Express.js
-- Performing CRUD operations using SQL
-- Integrating SQLite with Node.js
-- Validating user input and handling HTTP errors
-- Persisting data across server restarts
-- Testing SQL queries using DB Browser for SQLite
+This project helped develop practical understanding of:
+
+- REST API development using Express.js.
+- Separating routes, services, and repository logic.
+- Connecting Node.js applications to PostgreSQL.
+- Using Docker and Docker Compose.
+- Database initialization and persistent storage.
+- Input validation, HTTP status codes, and error handling.
+
+## Running the Project
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:3000/tasks` to access the task collection endpoint.
